@@ -3,7 +3,6 @@ name: build
 on:
   push:
     branches: [ main, master ]
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -12,11 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Unpack project zip
+        run: |
+          for z in *.zip; do
+            [ -f "$z" ] && unzip -q -o "$z" -d _src
+          done
+
       - name: Find project directory
         id: proj
         run: |
           f=$(find . -name settings.gradle -not -path './.git/*' | head -n1)
-          if [ -z "$f" ]; then echo "settings.gradle not found"; exit 1; fi
+          if [ -z "$f" ]; then
+            echo "settings.gradle not found"; ls -R | head -50; exit 1
+          fi
           echo "dir=$(dirname "$f")" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 21
